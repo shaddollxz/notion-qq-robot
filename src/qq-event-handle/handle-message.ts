@@ -1,5 +1,5 @@
 import type { IMessage } from "qq-guild-bot";
-import { safetyPostMessageToChannel } from "./api";
+import { safetyPostMessageToChannel } from "../api";
 import type { Directives } from "./types";
 
 export async function handleMessage(message: {

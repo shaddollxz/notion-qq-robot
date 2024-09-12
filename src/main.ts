@@ -1,5 +1,5 @@
 import { ws } from "./api";
-import { handleMessage } from "./handle-message";
+import { handleMessage } from "./qq-event-handle/handle-message";
 import { formatDateStr } from "./utils";
 
 // 任意消息触发
@@ -7,12 +7,6 @@ import { formatDateStr } from "./utils";
 // @ts-ignore
 ws.on("GUILD_MESSAGES", (data) => {
   console.log(`${formatDateStr()} [GUILD_MESSAGES] 事件接收 :`, data);
-});
-
-// @机器人后触发
-// @ts-ignore
-ws.on("PUBLIC_GUILD_MESSAGES", (data) => {
-  console.log(`${formatDateStr()} [PUBLIC_GUILD_MESSAGES] 事件接收 :`, data);
   handleMessage(data);
 });
 
@@ -24,6 +18,13 @@ ws.on("READY", (data) => {
 ws.on("ERROR", (data) => {
   console.log(`${formatDateStr()} [ERROR] 事件接收 :`, data);
 });
+
+// @机器人后触发
+// // @ts-ignore
+// ws.on("PUBLIC_GUILD_MESSAGES", (data) => {
+//   console.log(`${formatDateStr()} [PUBLIC_GUILD_MESSAGES] 事件接收 :`, data);
+//   handleMessage(data);
+// });
 
 // // @ts-ignore
 // ws.on("GUILDS", (data) => {
