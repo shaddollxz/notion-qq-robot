@@ -1,6 +1,8 @@
 import type { IMessage } from "qq-guild-bot";
 import { safetyPostMessageToChannel } from "../api";
-import type { Directives } from "./types";
+import { Directives } from "./types";
+import { createBookMark } from "../notion-api/book-mark-data-base";
+import { handleInstructions, referenceMessageGuardian } from "./utils";
 
 export async function handleMessage(message: {
   eventType: string;
@@ -9,54 +11,41 @@ export async function handleMessage(message: {
     message_reference?: { message_id: string };
   };
 }) {
-  const { channel_id: channelId, content, message_reference } = message.msg;
+  const { channel_id: channelId, content } = message.msg;
 
   const messageContent = handleInstructions(content);
 
-  if (!messageContent) return;
+  // 忽略全部为空格或者没有内容的消息
+  if (/\S/.test(messageContent.content)) return;
 
-  switch (messageContent.direct) {
-    // like 指令是默认指令
-    case "like": {
-      if (!message_reference) {
-        const errorMsg = "该指令必须包含一个消息引用";
-        safetyPostMessageToChannel({ message: errorMsg, channelId });
+  try {
+    switch (messageContent.direct) {
+      case Directives.Like: {
+        referenceMessageGuardian(channelId, message.msg);
 
-        return console.error(errorMsg);
+        // TODO: 将信息处理后提交给 notion
+        const res = await createBookMark({
+          title: messageContent.content,
+        });
+
+        safetyPostMessageToChannel({
+          message: `接受到消息\n指令: like\n内容: ${messageContent.content}\n已创建收藏: ${res.id}`,
+          channelId,
+        });
       }
+      case Directives.AutoLike: {
+        // TODO: 将信息处理后提交给 notion
+        const res = await createBookMark({
+          title: messageContent.content,
+        });
 
-      // TODO: 将信息处理后提交给 notion
-      safetyPostMessageToChannel({
-        message: `接受到消息\n指令: like\n内容: ${messageContent.content}`,
-        channelId,
-      });
+        safetyPostMessageToChannel({
+          message: `接受到消息\n指令: like\n内容: ${messageContent.content}\n已创建收藏: ${res.id}`,
+          channelId,
+        });
+      }
     }
-  }
-}
-
-function handleInstructions(instructions: string) {
-  if (
-    /^<@!(?<robotId>\d+?)> \/(?<direct>.+?) (?<content>.*)/.test(instructions)
-  ) {
-    return instructions.match(
-      /^<@!(?<robotId>\d+?)> \/(?<direct>.+?) (?<content>.*)/
-    )!.groups as
-      | {
-          robotId: string;
-          direct: Directives;
-          content: string;
-        }
-      | undefined;
-  } else {
-    return {
-      ...instructions.match(/^<@!(?<robotId>\d+?)> (?<content>.*)/)!.groups,
-      direct: "like",
-    } as
-      | {
-          robotId: string;
-          direct: Directives;
-          content: string;
-        }
-      | undefined;
+  } catch (error) {
+    console.error(error);
   }
 }
