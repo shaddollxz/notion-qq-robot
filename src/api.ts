@@ -1,5 +1,5 @@
 import { configDotenv } from "dotenv";
-import { AvailableIntentsEventsEnum } from "qq-guild-bot";
+import { AvailableIntentsEventsEnum, type IMessage } from "qq-guild-bot";
 import { createOpenAPI, createWebsocket } from "qq-guild-bot";
 import { formatDateStr } from "./utils";
 
@@ -45,4 +45,15 @@ export async function safetyPostMessageToChannel({
       );
     }
   }
+}
+
+export async function getReferenceMessage({
+  channelId,
+  referId: messageId,
+}: {
+  referId: string;
+  channelId: string;
+}) {
+  const { data } = await client.messageApi.message(channelId, messageId);
+  return data.message as IMessage;
 }

@@ -1,31 +1,30 @@
-import type { IMessage } from "qq-guild-bot";
 import { safetyPostMessageToChannel } from "../api";
 import { formatDateStr } from "../utils";
 import { Directives } from "./types";
 
+export type MessageContentInfo = {
+  atUserId?: string;
+  direct: Directives;
+  content: string;
+};
+
 export function handleInstructions(instructions: string) {
   const regexpMap = {
-    atAndDirect: /^<@!(?<atUserId>\d+?)> \/(?<direct>.+?) (?<content>.*)/,
-    onlyAt: /^<@!(?<atUserId>\d+?)> (?<content>.*)/,
+    atAndDirect:
+      /^<@!(?<atUserId>\d+?)>(\s*)\/(?<direct>.+?)(\s*)(?<content>.*)/,
+    onlyAt: /^<@!(?<atUserId>\d+?)>(\s*)(?<content>.*)/,
   };
 
   if (regexpMap.atAndDirect.test(instructions)) {
-    return instructions.match(regexpMap.atAndDirect)!.groups as {
-      atUserId?: string;
-      direct: Directives;
-      content: string;
-    };
+    return instructions.match(regexpMap.atAndDirect)!
+      .groups as MessageContentInfo;
   }
 
   if (regexpMap.onlyAt.test(instructions)) {
     return {
       ...instructions.match(regexpMap.onlyAt)!.groups,
       direct: Directives.Like,
-    } as {
-      atUserId?: string;
-      direct: Directives;
-      content: string;
-    };
+    } as MessageContentInfo;
   }
 
   return {
@@ -37,11 +36,9 @@ export function handleInstructions(instructions: string) {
 
 export function referenceMessageGuardian(
   channelId: string,
-  msg: IMessage & {
-    message_reference?: { message_id: string };
-  }
-) {
-  if (!msg.message_reference) {
+  msg: { message_id: string } | undefined
+): asserts msg is { message_id: string } {
+  if (!msg?.message_id) {
     const errorMsg = "该指令必须包含一个消息引用";
     safetyPostMessageToChannel({ message: errorMsg, channelId });
 

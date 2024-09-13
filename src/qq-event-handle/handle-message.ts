@@ -1,51 +1,76 @@
-import type { IMessage } from "qq-guild-bot";
-import { safetyPostMessageToChannel } from "../api";
-import { Directives } from "./types";
+import { getReferenceMessage, safetyPostMessageToChannel } from "../api";
+import { Directives, type ResponseMessage } from "./types";
 import { createBookMark } from "../notion-api/book-mark-data-base";
-import { handleInstructions, referenceMessageGuardian } from "./utils";
+import {
+  handleInstructions,
+  referenceMessageGuardian,
+  type MessageContentInfo,
+} from "./utils";
 
-export async function handleMessage(message: {
+export async function handleMessage({
+  msg,
+}: {
   eventType: string;
   eventId: string;
-  msg: IMessage & {
-    message_reference?: { message_id: string };
-  };
+  msg: ResponseMessage;
 }) {
-  const { channel_id: channelId, content } = message.msg;
-
-  const messageContent = handleInstructions(content);
-
-  // 忽略全部为空格或者没有内容的消息
-  if (/\S/.test(messageContent.content)) return;
+  const messageContent = handleInstructions(msg.content);
 
   try {
     switch (messageContent.direct) {
       case Directives.Like: {
-        referenceMessageGuardian(channelId, message.msg);
-
-        // TODO: 将信息处理后提交给 notion
-        const res = await createBookMark({
-          title: messageContent.content,
-        });
-
-        safetyPostMessageToChannel({
-          message: `接受到消息\n指令: like\n内容: ${messageContent.content}\n已创建收藏: ${res.id}`,
-          channelId,
-        });
+        return await handleLikeMessage(msg, messageContent);
       }
       case Directives.AutoLike: {
-        // TODO: 将信息处理后提交给 notion
-        const res = await createBookMark({
-          title: messageContent.content,
-        });
-
-        safetyPostMessageToChannel({
-          message: `接受到消息\n指令: like\n内容: ${messageContent.content}\n已创建收藏: ${res.id}`,
-          channelId,
-        });
+        return await handleAutoLikeMessage(msg, messageContent);
       }
     }
   } catch (error) {
     console.error(error);
   }
+}
+
+async function handleAutoLikeMessage(
+  { channel_id: channelId }: ResponseMessage,
+  messageContent: MessageContentInfo
+) {
+  // TODO: 将信息处理后提交给 notion
+  const res = await createBookMark({
+    title: messageContent.content,
+  });
+
+  return safetyPostMessageToChannel({
+    message: `接受到消息
+指令: like
+内容: ${messageContent.content}
+已创建收藏: ${res.id}`,
+    channelId,
+  });
+}
+
+async function handleLikeMessage(
+  { channel_id: channelId, message_reference }: ResponseMessage,
+  messageContent: MessageContentInfo
+) {
+  referenceMessageGuardian(channelId, message_reference);
+
+  const referenceMessage = await getReferenceMessage({
+    channelId,
+    referId: message_reference.message_id,
+  });
+
+  // TODO: 将信息处理后提交给 notion
+  const res = await createBookMark({
+    title: referenceMessage.content,
+    description: messageContent.content,
+  });
+
+  return safetyPostMessageToChannel({
+    message: `接受到消息
+指令: like
+回复内容: ${messageContent.content}
+引用信息: ${referenceMessage.content}
+已创建收藏: ${res.id}`,
+    channelId,
+  });
 }
