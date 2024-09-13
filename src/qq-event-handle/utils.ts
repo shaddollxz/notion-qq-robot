@@ -1,6 +1,9 @@
+import { title } from "process";
 import { safetyPostMessageToChannel } from "../api";
+import type { BookMarkRow } from "../notion-api/book-mark-properties-map";
 import { formatDateStr } from "../utils";
 import { Directives } from "./types";
+import { link } from "fs";
 
 export type MessageContentInfo = {
   atUserId?: string;
@@ -8,16 +11,27 @@ export type MessageContentInfo = {
   content: string;
 };
 
-export function handleInstructions(instructions: string) {
+export function analyserDirect(content: string) {
+  const instructions = content.trim();
+
   const regexpMap = {
-    atAndDirect:
-      /^<@!(?<atUserId>\d+?)>(\s*)\/(?<direct>.+?)(\s*)(?<content>.*)/,
+    atAndDirectAndContent:
+      /^<@!(?<atUserId>\d+?)>(\s)\/(?<direct>.+?)(\s)(?<content>.*)/,
+    atAndDirect: /^<@!(?<atUserId>\d+?)>(\s)\/(?<direct>.+)/,
     onlyAt: /^<@!(?<atUserId>\d+?)>(\s*)(?<content>.*)/,
   };
 
-  if (regexpMap.atAndDirect.test(instructions)) {
-    return instructions.match(regexpMap.atAndDirect)!
+  if (regexpMap.atAndDirectAndContent.test(instructions)) {
+    return instructions.match(regexpMap.atAndDirectAndContent)!
       .groups as MessageContentInfo;
+  }
+
+  if (regexpMap.atAndDirect.test(instructions)) {
+    return {
+      ...(instructions.match(regexpMap.atAndDirect)!
+        .groups as MessageContentInfo),
+      content: "",
+    };
   }
 
   if (regexpMap.onlyAt.test(instructions)) {
@@ -34,6 +48,51 @@ export function handleInstructions(instructions: string) {
   };
 }
 
+export function analyserShareContent(contentStr: string) {
+  const content = decodeURIComponent(contentStr);
+
+  const regexpMap = {
+    qqShare:
+      /^\[.+?\](?<title>.+?)\s(?<description>.*?)\s(?<link>http(s?):\/\/.+?)\s.+?\s(?<from>.+)$/,
+    linkWithText: /.*?(?<link>https?:\/\/[^\*]*?)[^\w|\/|\?|\=|#|&|.|-]/g,
+  };
+
+  if (regexpMap.qqShare.test(content)) {
+    return content.match(regexpMap.qqShare)!.groups as unknown as BookMarkRow;
+  }
+
+  let row: BookMarkRow = {
+    title: content,
+    description: content,
+  };
+
+  if (regexpMap.linkWithText.test(content)) {
+    const result = content.match(regexpMap.linkWithText)!.groups!;
+
+    row = {
+      title: result.link,
+      link: result.link,
+      description: content,
+    };
+
+    row.from = [
+      { host: ["bilibili.com"], name: "哔哩哔哩" },
+      { host: ["xiaoheihe.cn"], name: "小黑盒" },
+      { host: ["skyland.com"], name: "森空岛" },
+    ].reduce((acc, cur) => {
+      if (acc) return acc;
+
+      if (cur.host.some((url) => result.link.includes(url))) {
+        return cur.name;
+      }
+
+      return acc;
+    }, "");
+  }
+
+  return row;
+}
+
 export function referenceMessageGuardian(
   channelId: string,
   msg: { message_id: string } | undefined
@@ -47,5 +106,15 @@ export function referenceMessageGuardian(
     )}`;
 
     throw new Error(errorHistory);
+  }
+}
+
+export function notSupportMessageGuardian(channelId: string, content: string) {
+  const errorMsg = "当前版本不支持该消息类型，请使用最新版本手机QQ查看";
+
+  if (content.includes(errorMsg)) {
+    safetyPostMessageToChannel({ message: errorMsg, channelId });
+
+    throw new Error(errorMsg);
   }
 }

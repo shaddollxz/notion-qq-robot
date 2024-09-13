@@ -2,7 +2,9 @@ import { getReferenceMessage, safetyPostMessageToChannel } from "../api";
 import { Directives, type ResponseMessage } from "./types";
 import { createBookMark } from "../notion-api/book-mark-data-base";
 import {
-  handleInstructions,
+  analyserDirect,
+  analyserShareContent,
+  notSupportMessageGuardian,
   referenceMessageGuardian,
   type MessageContentInfo,
 } from "./utils";
@@ -14,7 +16,7 @@ export async function handleMessage({
   eventId: string;
   msg: ResponseMessage;
 }) {
-  const messageContent = handleInstructions(msg.content);
+  const messageContent = analyserDirect(msg.content);
 
   try {
     switch (messageContent.direct) {
@@ -34,16 +36,20 @@ async function handleAutoLikeMessage(
   { channel_id: channelId }: ResponseMessage,
   messageContent: MessageContentInfo
 ) {
-  // TODO: 将信息处理后提交给 notion
-  const res = await createBookMark({
+  notSupportMessageGuardian(channelId, messageContent.content);
+
+  const sharedData = analyserShareContent(messageContent.content);
+
+  const bookMark = sharedData ?? {
     title: messageContent.content,
-  });
+  };
+
+  const { id } = await createBookMark(bookMark);
 
   return safetyPostMessageToChannel({
     message: `接受到消息
-指令: like
-内容: ${messageContent.content}
-已创建收藏: ${res.id}`,
+指令: auto_like
+已创建收藏: ${id}`,
     channelId,
   });
 }
@@ -59,18 +65,26 @@ async function handleLikeMessage(
     referId: message_reference.message_id,
   });
 
-  // TODO: 将信息处理后提交给 notion
-  const res = await createBookMark({
-    title: referenceMessage.content,
-    description: messageContent.content,
-  });
+  notSupportMessageGuardian(channelId, referenceMessage.content);
+
+  const sharedData = analyserShareContent(referenceMessage.content);
+
+  const bookMark = sharedData
+    ? {
+        ...sharedData,
+        description: messageContent.content || sharedData.description,
+      }
+    : {
+        title: referenceMessage.content,
+        description: messageContent.content,
+      };
+
+  const { id } = await createBookMark(bookMark);
 
   return safetyPostMessageToChannel({
     message: `接受到消息
 指令: like
-回复内容: ${messageContent.content}
-引用信息: ${referenceMessage.content}
-已创建收藏: ${res.id}`,
+已创建收藏: ${id}`,
     channelId,
   });
 }
