@@ -36,7 +36,26 @@ export function createRow(
           };
           break;
         }
-        // TODO: 多选和单选
+        case "multi_select": {
+          body = {
+            type: "multi_select",
+            multi_select: value.map((item: string) => ({
+              id: field.multi_select.options.find(
+                (option) => option.name === item
+              )!.id,
+            })),
+          };
+          break;
+        }
+        case "select": {
+          body = {
+            type: "select",
+            select: {
+              id: field.select.options.find((option) => option.name === value)!
+                .id!,
+            },
+          };
+        }
       }
 
       if (!body) return [];
