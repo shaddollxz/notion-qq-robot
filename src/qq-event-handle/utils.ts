@@ -1,7 +1,7 @@
 import type { IMessage } from "qq-guild-bot";
 import { safetyPostMessageToChannel } from "../api";
 import type { BookMarkRow } from "../notion-api/book-mark-properties-map";
-import { formatDateStr } from "../utils";
+import { formatDateStr, useTemplate } from "../utils";
 import { Directives, type ResponseMessage } from "./types";
 
 export type MessageContentInfo = {
@@ -123,3 +123,5 @@ export function notSupportMessageGuardian(
     throw new Error(errorMsg);
   }
 }
+
+export const likeMessageTemplate = useTemplate`\n已创建收藏：${"notionPageId"}\n\n回复本信息并添加指令执行更多操作喵~`;

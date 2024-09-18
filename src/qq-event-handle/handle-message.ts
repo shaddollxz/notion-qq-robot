@@ -4,6 +4,7 @@ import { createBookMark } from "../notion-api/book-mark-data-base";
 import {
   analyserDirect,
   analyserShareContent,
+  likeMessageTemplate,
   notSupportMessageGuardian,
   referenceMessageGuardian,
   type MessageContentInfo,
@@ -47,9 +48,9 @@ async function handleAutoLikeMessage(
   const { id: notionPageId } = await createBookMark(bookMark);
 
   return safetyPostMessageToChannel({
-    message: `接受到消息
-指令: auto_like
-已创建收藏: ${notionPageId}`,
+    message: likeMessageTemplate.setDate({
+      notionPageId,
+    }),
     ...handleMsg,
   });
 }
@@ -82,9 +83,9 @@ async function handleLikeMessage(
   const { id: notionPageId } = await createBookMark(bookMark);
 
   return safetyPostMessageToChannel({
-    message: `接受到消息
-指令: like
-已创建收藏: ${notionPageId}`,
+    message: likeMessageTemplate.setDate({
+      notionPageId,
+    }),
     ...handleMsg,
   });
 }
