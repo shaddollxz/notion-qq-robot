@@ -33,10 +33,10 @@ export async function handleMessage({
 }
 
 async function handleAutoLikeMessage(
-  { channel_id: channelId }: ResponseMessage,
+  handleMsg: ResponseMessage,
   messageContent: MessageContentInfo
 ) {
-  notSupportMessageGuardian(channelId, messageContent.content);
+  notSupportMessageGuardian(handleMsg, messageContent.content);
 
   const sharedData = analyserShareContent(messageContent.content);
 
@@ -44,28 +44,28 @@ async function handleAutoLikeMessage(
     title: messageContent.content,
   };
 
-  const { id } = await createBookMark(bookMark);
+  const { id: notionPageId } = await createBookMark(bookMark);
 
   return safetyPostMessageToChannel({
     message: `接受到消息
 指令: auto_like
-已创建收藏: ${id}`,
-    channelId,
+已创建收藏: ${notionPageId}`,
+    ...handleMsg,
   });
 }
 
 async function handleLikeMessage(
-  { channel_id: channelId, message_reference }: ResponseMessage,
+  handleMsg: ResponseMessage,
   messageContent: MessageContentInfo
 ) {
-  referenceMessageGuardian(channelId, message_reference);
+  referenceMessageGuardian(handleMsg);
 
   const referenceMessage = await getReferenceMessage({
-    channelId,
-    referId: message_reference.message_id,
+    channelId: handleMsg.channel_id,
+    referId: handleMsg.message_reference.message_id,
   });
 
-  notSupportMessageGuardian(channelId, referenceMessage.content);
+  notSupportMessageGuardian(handleMsg, referenceMessage.content);
 
   const sharedData = analyserShareContent(referenceMessage.content);
 
@@ -79,12 +79,12 @@ async function handleLikeMessage(
         description: messageContent.content,
       };
 
-  const { id } = await createBookMark(bookMark);
+  const { id: notionPageId } = await createBookMark(bookMark);
 
   return safetyPostMessageToChannel({
     message: `接受到消息
 指令: like
-已创建收藏: ${id}`,
-    channelId,
+已创建收藏: ${notionPageId}`,
+    ...handleMsg,
   });
 }

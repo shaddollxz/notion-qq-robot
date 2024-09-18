@@ -2,6 +2,7 @@ import { configDotenv } from "dotenv";
 import { AvailableIntentsEventsEnum, type IMessage } from "qq-guild-bot";
 import { createOpenAPI, createWebsocket } from "qq-guild-bot";
 import { formatDateStr } from "./utils";
+import type { ResponseMessage } from "./qq-event-handle/types";
 
 configDotenv();
 
@@ -25,14 +26,18 @@ export const ws = createWebsocket(testConfig);
 
 export async function safetyPostMessageToChannel({
   message,
-  channelId,
-}: {
+  channel_id,
+  id,
+}: ResponseMessage & {
   message: string;
-  channelId: string;
 }) {
   try {
-    await client.messageApi.postMessage(channelId, {
+    await client.messageApi.postMessage(channel_id, {
       content: message,
+      msg_id: id,
+      message_reference: {
+        message_id: id,
+      },
     });
   } catch (error) {
     if (

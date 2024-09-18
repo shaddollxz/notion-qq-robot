@@ -1,9 +1,8 @@
-import { title } from "process";
+import type { IMessage } from "qq-guild-bot";
 import { safetyPostMessageToChannel } from "../api";
 import type { BookMarkRow } from "../notion-api/book-mark-properties-map";
 import { formatDateStr } from "../utils";
-import { Directives } from "./types";
-import { link } from "fs";
+import { Directives, type ResponseMessage } from "./types";
 
 export type MessageContentInfo = {
   atUserId?: string;
@@ -94,26 +93,32 @@ export function analyserShareContent(contentStr: string) {
 }
 
 export function referenceMessageGuardian(
-  channelId: string,
-  msg: { message_id: string } | undefined
-): asserts msg is { message_id: string } {
-  if (!msg?.message_id) {
+  handleMsg: ResponseMessage
+): asserts handleMsg is Required<ResponseMessage> {
+  if (!handleMsg.message_reference?.message_id) {
     const errorMsg = "该指令必须包含一个消息引用";
-    safetyPostMessageToChannel({ message: errorMsg, channelId });
+
+    safetyPostMessageToChannel({
+      message: errorMsg,
+      ...handleMsg,
+    });
 
     const errorHistory = `[${formatDateStr}]: ${errorMsg} -- ${JSON.stringify(
-      msg
+      handleMsg
     )}`;
 
     throw new Error(errorHistory);
   }
 }
 
-export function notSupportMessageGuardian(channelId: string, content: string) {
+export function notSupportMessageGuardian(
+  msg: ResponseMessage,
+  content: string
+) {
   const errorMsg = "当前版本不支持该消息类型，请使用最新版本手机QQ查看";
 
   if (content.includes(errorMsg)) {
-    safetyPostMessageToChannel({ message: errorMsg, channelId });
+    safetyPostMessageToChannel({ message: errorMsg, ...msg });
 
     throw new Error(errorMsg);
   }
