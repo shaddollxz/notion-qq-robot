@@ -3,7 +3,6 @@ import { handleMessage } from "./qq-event-handle";
 import { formatDateStr } from "./utils";
 
 // 任意消息触发
-// FIXME: 如果使用会和 PUBLIC_GUILD_MESSAGES 冲突
 // @ts-ignore
 ws.on("GUILD_MESSAGES", (data) => {
   console.log(`${formatDateStr()} [GUILD_MESSAGES] 事件接收 :`, data);

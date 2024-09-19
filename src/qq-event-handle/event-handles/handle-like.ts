@@ -11,6 +11,7 @@ import {
   referenceMessageGuardian,
   type MessageContentInfo,
 } from "../utils";
+import type { BookMarkClientProps } from "../../notion-api/book-mark-properties-map";
 
 export async function handleLikeMessage(
   handleMsg: ResponseMessage,
@@ -27,15 +28,13 @@ export async function handleLikeMessage(
 
   const sharedData = analyserShareContent(referenceMessage.content);
 
-  const bookMark = sharedData
-    ? {
-        ...sharedData,
-        description: messageContent.content || sharedData.description,
-      }
-    : {
-        title: referenceMessage.content,
-        description: messageContent.content,
-      };
+  const bookMark: BookMarkClientProps = {
+    properties: {
+      ...sharedData.properties,
+      description: messageContent.content || sharedData.properties.description,
+    },
+    content: referenceMessage.content,
+  };
 
   const { id: notionPageId } = await createBookMark(bookMark);
 

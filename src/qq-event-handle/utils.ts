@@ -1,13 +1,20 @@
 import { safetyPostMessageToChannel, type ResponseMessage } from "../qq-api";
-import type { BookMarkRow } from "../notion-api/book-mark-properties-map";
+import type {
+  BookMarkClientProps,
+  BookMarkProperties,
+} from "../notion-api/book-mark-properties-map";
 import { formatDateStr, useTemplate } from "../utils";
 import { DEFAULT_DIRECTIVE, Directives } from "./types";
+import { parseEntities } from "parse-entities";
 
 const ADDRESS_MAP = [
   { host: ["bilibili.com"], name: "bilibili" },
   { host: ["xiaoheihe.cn"], name: "小黑盒" },
   { host: ["skyland.com"], name: "森空岛" },
   { host: ["github.com"], name: "github" },
+  { host: ["pan.baidu.com"], name: "网盘" },
+  { host: ["tieba.baidu.com"], name: "贴吧" },
+  { host: ["zhihu.com"], name: "知乎" },
 ];
 
 export type MessageContentInfo = {
@@ -54,36 +61,47 @@ export function analyserDirect(content: string) {
 }
 
 export function analyserShareContent(contentStr: string) {
-  const content = decodeURIComponent(contentStr);
+  const content = parseEntities(decodeURIComponent(contentStr));
 
   const regexpMap = {
-    qqShare:
-      /^\[.+?\](?<title>.+?)\s(?<description>.*?)\s(?<link>http(s?):\/\/.+?)\s.+?\s(?<from>.+)$/,
-    linkWithText: /.*?(?<link>https?:\/\/[^\*]*?)[^\w|\/|\?|\=|#|&|.|-]/g,
+    qqShare: /^\[.+?\](?<title>.+?)\s(.*?)\s(?<link>http(s?):\/\/.+?)\s.+?\s/,
+    linkWithText:
+      /(?<pre>.*?)\s?(?<link>https?:\/\/.+?)(\s|(?<suffix1>[^\w|\/|\?|\=|#|&|.|-]|$))(?<suffix2>.*)$/,
   };
 
-  if (regexpMap.qqShare.test(content)) {
-    return content.match(regexpMap.qqShare)!.groups as unknown as BookMarkRow;
+  let row: BookMarkClientProps = {
+    properties: {
+      title: content,
+    },
+  };
+
+  let matched = false;
+
+  if (!matched && regexpMap.qqShare.test(content)) {
+    matched = true;
+    row.properties = content.match(regexpMap.qqShare)!
+      .groups as unknown as BookMarkProperties;
   }
 
-  let row: BookMarkRow = {
-    title: content,
-    description: content,
-  };
-
-  if (regexpMap.linkWithText.test(content)) {
+  if (!matched && regexpMap.linkWithText.test(content)) {
+    matched = true;
     const result = content.match(regexpMap.linkWithText)!.groups!;
 
     row = {
-      title: result.link,
-      link: result.link,
-      description: content,
+      properties: {
+        title: result.pre || `${result.suffix1 ?? ""}${result.suffix2}`,
+        description: `${result.suffix1 ?? ""}${result.suffix2}`,
+        link: result.link,
+      },
+      content,
     };
+  }
 
-    row.from = ADDRESS_MAP.reduce((acc, cur) => {
+  if (row.properties.link) {
+    row.properties.from = ADDRESS_MAP.reduce((acc, cur) => {
       if (acc) return acc;
 
-      if (cur.host.some((url) => result.link.includes(url))) {
+      if (cur.host.some((url) => row.properties.link!.includes(url))) {
         return cur.name;
       }
 
