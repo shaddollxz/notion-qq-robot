@@ -1,12 +1,12 @@
 import type { PartialDatabaseObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { notion } from "./notion";
+import { notionClient } from "./notion-client";
 import {
   bookMarkPropertiesMap,
   type BookMarkRow,
 } from "./book-mark-properties-map";
 import { createRow } from "./utils";
 
-const { results } = await notion.search({
+const { results } = await notionClient.search({
   query: process.env.NOTION_BOOKMARK_NAME,
   filter: {
     property: "object",
@@ -17,7 +17,7 @@ const { results } = await notion.search({
 const bookMarkDataBase = results[0] as PartialDatabaseObjectResponse;
 
 export async function createBookMark(data: BookMarkRow) {
-  return await notion.pages.create({
+  return await notionClient.pages.create({
     parent: { type: "database_id", database_id: bookMarkDataBase.id },
     properties: createRow(
       data,
@@ -26,5 +26,3 @@ export async function createBookMark(data: BookMarkRow) {
     ),
   });
 }
-
-// TODO: 更新数据列

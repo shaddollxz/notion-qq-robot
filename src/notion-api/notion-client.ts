@@ -3,4 +3,4 @@ import { configDotenv } from "dotenv";
 
 configDotenv();
 
-export const notion = new Client({ auth: process.env.NOTION_SECRET });
+export const notionClient = new Client({ auth: process.env.NOTION_SECRET });

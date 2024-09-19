@@ -1,5 +1,5 @@
-import { ws } from "./api";
-import { handleMessage } from "./qq-event-handle/handle-message";
+import { ws } from "./qq-api";
+import { handleMessage } from "./qq-event-handle";
 import { formatDateStr } from "./utils";
 
 // 任意消息触发

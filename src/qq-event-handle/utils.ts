@@ -1,8 +1,14 @@
-import type { IMessage } from "qq-guild-bot";
-import { safetyPostMessageToChannel } from "../api";
+import { safetyPostMessageToChannel, type ResponseMessage } from "../qq-api";
 import type { BookMarkRow } from "../notion-api/book-mark-properties-map";
 import { formatDateStr, useTemplate } from "../utils";
-import { Directives, type ResponseMessage } from "./types";
+import { DEFAULT_DIRECTIVE, Directives } from "./types";
+
+const ADDRESS_MAP = [
+  { host: ["bilibili.com"], name: "bilibili" },
+  { host: ["xiaoheihe.cn"], name: "小黑盒" },
+  { host: ["skyland.com"], name: "森空岛" },
+  { host: ["github.com"], name: "github" },
+];
 
 export type MessageContentInfo = {
   atUserId?: string;
@@ -42,7 +48,7 @@ export function analyserDirect(content: string) {
 
   return {
     atUserId: undefined,
-    direct: Directives.AutoLike,
+    direct: DEFAULT_DIRECTIVE,
     content: instructions,
   };
 }
@@ -74,11 +80,7 @@ export function analyserShareContent(contentStr: string) {
       description: content,
     };
 
-    row.from = [
-      { host: ["bilibili.com"], name: "哔哩哔哩" },
-      { host: ["xiaoheihe.cn"], name: "小黑盒" },
-      { host: ["skyland.com"], name: "森空岛" },
-    ].reduce((acc, cur) => {
+    row.from = ADDRESS_MAP.reduce((acc, cur) => {
       if (acc) return acc;
 
       if (cur.host.some((url) => result.link.includes(url))) {
