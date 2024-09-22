@@ -10,6 +10,8 @@ export function createRow(
 ) {
   return Object.fromEntries(
     Object.entries(data).flatMap(([key, value]) => {
+      if (!value) return [];
+
       const field = properties[fieldMap[key as keyof typeof fieldMap]];
 
       let body: CreatePageParameters["properties"][string] | undefined;

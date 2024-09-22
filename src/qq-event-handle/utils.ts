@@ -8,7 +8,7 @@ import { DEFAULT_DIRECTIVE, Directives } from "./types";
 import { parseEntities } from "parse-entities";
 
 const ADDRESS_MAP = [
-  { host: ["bilibili.com"], name: "bilibili" },
+  { host: ["bilibili.com", "b23.tv"], name: "bilibili" },
   { host: ["xiaoheihe.cn"], name: "小黑盒" },
   { host: ["skyland.com"], name: "森空岛" },
   { host: ["github.com"], name: "github" },

@@ -22,6 +22,7 @@ export async function createBookMark({
 }: BookMarkClientProps) {
   return await notionClient.pages.create({
     parent: { type: "database_id", database_id: bookMarkDataBase.id },
+    icon: { type: "emoji", emoji: "✨" },
     properties: createRow(
       properties,
       bookMarkDataBase.properties,
