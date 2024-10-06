@@ -1,11 +1,13 @@
-import { safetyPostMessageToChannel, type ResponseMessage } from "../qq-api";
+import { guildApi, type ClientApi, type ResponseMessage } from "../qq-api";
 import type {
   BookMarkClientProps,
   BookMarkProperties,
 } from "../notion-api/book-mark-properties-map";
-import { formatDateStr, useTemplate } from "../utils";
+import { useTemplate } from "../utils";
 import { DEFAULT_DIRECTIVE, Directives } from "./types";
 import { parseEntities } from "parse-entities";
+import { c2cApi } from "../qq-api/c2c-api";
+import type { MessageReference } from "qq-guild-bot";
 
 const ADDRESS_MAP = [
   { host: ["bilibili.com", "b23.tv"], name: "bilibili" },
@@ -23,6 +25,54 @@ export type MessageContentInfo = {
   content: string;
 };
 
+export type MessageContext = {
+  contextId: string;
+  messageId: string;
+  messageReference?: MessageReference;
+};
+
+export function getMessageContext({
+  msg,
+  eventType,
+}: {
+  eventType: string;
+  eventId: string;
+  msg: ResponseMessage;
+}): { messageContext: MessageContext; clientApi: ClientApi } {
+  switch (eventType) {
+    // 库没有提供 enum，参考 https://bot.q.qq.com/wiki/develop/nodesdk/wss/model.html
+
+    // 频道中发送新的消息
+    case "MESSAGE_CREATE": {
+      return {
+        clientApi: guildApi,
+        messageContext: {
+          // 回复时的上下文 id，频道中为 channelId，群聊中为 groupOpenId，私聊中为 openId
+          contextId: msg.channel_id,
+          messageId: msg.id,
+          messageReference: msg.message_reference,
+        },
+      };
+    }
+
+    // 私聊中发送新的消息
+    // FIXME: 私聊 api 中不支持转发
+    // https://bot.q.qq.com/wiki/develop/api-v2/server-inter/message/send-receive/send.html#%E5%8D%95%E8%81%8A
+    case "C2C_MESSAGE_CREATE": {
+      return {
+        clientApi: c2cApi,
+        messageContext: {
+          contextId: msg.author.id,
+          messageId: msg.id,
+        },
+      };
+    }
+
+    default:
+      throw new Error(`不支持的消息类型：${eventType}`);
+  }
+}
+
 export function analyserDirect(content: string) {
   const instructions = content.trim();
 
@@ -31,6 +81,7 @@ export function analyserDirect(content: string) {
       /^<@!(?<atUserId>\d+?)>(\s)\/(?<direct>.+?)(\s)(?<content>.*)/,
     atAndDirect: /^<@!(?<atUserId>\d+?)>(\s)\/(?<direct>.+)/,
     onlyAt: /^<@!(?<atUserId>\d+?)>(\s*)(?<content>.*)/,
+    onlyDirectAndNoAt: /^\/(?<direct>.+?)\s$/,
   };
 
   if (regexpMap.atAndDirectAndContent.test(instructions)) {
@@ -51,6 +102,10 @@ export function analyserDirect(content: string) {
       ...instructions.match(regexpMap.onlyAt)!.groups,
       direct: Directives.Like,
     } as MessageContentInfo;
+  }
+
+  if (regexpMap.onlyDirectAndNoAt.test(instructions)) {
+    throw new Error("指令需要带上 @");
   }
 
   return {
@@ -113,32 +168,35 @@ export function analyserShareContent(contentStr: string) {
 }
 
 export function referenceMessageGuardian(
-  handleMsg: ResponseMessage
-): asserts handleMsg is Required<ResponseMessage> {
-  if (!handleMsg.message_reference?.message_id) {
+  context: MessageContext,
+  { safetyPostMessage }: ClientApi
+): asserts context is Required<MessageContext> {
+  if (!context.messageReference?.message_id) {
     const errorMsg = "该指令必须包含一个消息引用";
 
-    safetyPostMessageToChannel({
+    safetyPostMessage({
       message: errorMsg,
-      ...handleMsg,
+      contextId: context.contextId,
+      referId: context.messageId,
     });
 
-    const errorHistory = `[${formatDateStr}]: ${errorMsg} -- ${JSON.stringify(
-      handleMsg
-    )}`;
-
-    throw new Error(errorHistory);
+    throw new Error(errorMsg);
   }
 }
 
 export function notSupportMessageGuardian(
-  msg: ResponseMessage,
-  content: string
+  context: MessageContext,
+  content: string,
+  { safetyPostMessage }: ClientApi
 ) {
   const errorMsg = "当前版本不支持该消息类型，请使用最新版本手机QQ查看";
 
   if (content.includes(errorMsg)) {
-    safetyPostMessageToChannel({ message: errorMsg, ...msg });
+    safetyPostMessage({
+      message: errorMsg,
+      contextId: context.contextId,
+      referId: context.messageId,
+    });
 
     throw new Error(errorMsg);
   }

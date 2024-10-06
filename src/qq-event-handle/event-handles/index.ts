@@ -1,2 +1,2 @@
-export * from "./handle-auto-like";
-export * from "./handle-like";
+export * from "./auto-like";
+export * from "./like";

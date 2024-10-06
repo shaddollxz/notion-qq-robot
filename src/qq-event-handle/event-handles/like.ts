@@ -1,8 +1,4 @@
-import {
-  getReferenceMessage,
-  safetyPostMessageToChannel,
-  type ResponseMessage,
-} from "../../qq-api";
+import type { ClientApi } from "../../qq-api";
 import { createBookMark } from "../../notion-api";
 import {
   analyserShareContent,
@@ -10,21 +6,29 @@ import {
   notSupportMessageGuardian,
   referenceMessageGuardian,
   type MessageContentInfo,
+  type MessageContext,
 } from "../utils";
 import type { BookMarkClientProps } from "../../notion-api/book-mark-properties-map";
 
-export async function handleLikeMessage(
-  handleMsg: ResponseMessage,
-  messageContent: MessageContentInfo
-) {
-  referenceMessageGuardian(handleMsg);
+export async function handleLikeMessage({
+  messageContent,
+  clientApi,
+  context,
+}: {
+  context: MessageContext;
+  clientApi: ClientApi;
+  messageContent: MessageContentInfo;
+}) {
+  const { getReferenceMessage, safetyPostMessage } = clientApi;
+
+  referenceMessageGuardian(context, clientApi);
 
   const referenceMessage = await getReferenceMessage({
-    channelId: handleMsg.channel_id,
-    referId: handleMsg.message_reference.message_id,
+    contextId: context.contextId,
+    referId: context.messageReference.message_id,
   });
 
-  notSupportMessageGuardian(handleMsg, referenceMessage.content);
+  notSupportMessageGuardian(context, referenceMessage.content, clientApi);
 
   const sharedData = analyserShareContent(referenceMessage.content);
 
@@ -38,10 +42,11 @@ export async function handleLikeMessage(
 
   const { id: notionPageId } = await createBookMark(bookMark);
 
-  return safetyPostMessageToChannel({
+  return safetyPostMessage({
     message: likeMessageTemplate.setDate({
       notionPageId,
     }),
-    ...handleMsg,
+    contextId: context.contextId,
+    referId: context.messageId,
   });
 }

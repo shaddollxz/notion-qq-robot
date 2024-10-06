@@ -1,3 +1,3 @@
-export * from "./qq-client";
 export * from "./types";
-export * from "./qq-api";
+export * from "./guild-api";
+export { ws } from "./qq-client";

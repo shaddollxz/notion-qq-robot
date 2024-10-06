@@ -68,6 +68,7 @@ web_modules/
 
 # Output of 'npm pack'
 *.tgz
+!qq-guild-bot-2.10.1.tgz
 
 # Yarn Integrity file
 .yarn-integrity

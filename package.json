@@ -16,7 +16,7 @@
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
     "parse-entities": "^4.0.1",
-    "qq-guild-bot": "^2.9.5"
+    "qq-guild-bot": "file:qq-guild-bot-2.10.1.tgz"
   },
   "devDependencies": {
     "@types/node": "^22.5.4",

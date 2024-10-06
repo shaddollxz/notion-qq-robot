@@ -18,8 +18,8 @@ dependencies:
     specifier: ^4.0.1
     version: 4.0.1
   qq-guild-bot:
-    specifier: ^2.9.5
-    version: 2.9.5
+    specifier: file:qq-guild-bot-2.10.1.tgz
+    version: file:qq-guild-bot-2.10.1.tgz
 
 devDependencies:
   '@types/node':
@@ -276,6 +276,12 @@ packages:
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
     dev: false
 
+  /@types/ws@8.5.12:
+    resolution: {integrity: sha512-3tPRkv1EtkDpzlgyKyI8pGsGZAGPEaXeu0DOj5DI25Ja91bdAYddYHbADRYVrZMRbfW+1l5YwXVDKohDJNQxkQ==}
+    dependencies:
+      '@types/node': 22.5.4
+    dev: false
+
   /asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
     dev: false
@@ -459,18 +465,6 @@ packages:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
     dev: false
 
-  /qq-guild-bot@2.9.5:
-    resolution: {integrity: sha512-vl5hvwRSwJV5sCv5rmClAZSfRHNU0ACmIMakJ+4HKkjIJI9ceHGJZYG5xeBx0yiVWtCzg+HSZzar0oO+/Udfsg==}
-    dependencies:
-      loglevel: 1.9.2
-      resty-client: 0.0.5
-      ws: 7.5.10
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - utf-8-validate
-    dev: false
-
   /resolve-pkg-maps@1.0.0:
     resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
     dev: true
@@ -529,4 +523,19 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
+    dev: false
+
+  file:qq-guild-bot-2.10.1.tgz:
+    resolution: {integrity: sha512-fhi/583dUyvUvTqOQ4XHgc4ehy4HrJ9aEhw34Lh4nmifhkzJQS0C0Ih5w/3ro1zyJWtH9cwhgt+ZGlEUe9+AHg==, tarball: file:qq-guild-bot-2.10.1.tgz}
+    name: qq-guild-bot
+    version: 2.10.1
+    dependencies:
+      '@types/ws': 8.5.12
+      loglevel: 1.9.2
+      resty-client: 0.0.5
+      ws: 7.5.10
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - utf-8-validate
     dev: false

@@ -1,22 +1,30 @@
+import { AvailableIntentsEventsEnum } from "qq-guild-bot";
 import { ws } from "./qq-api";
 import { handleMessage } from "./qq-event-handle";
 import { formatDateStr } from "./utils";
 
-// 任意消息触发
+// 频道中的子频道发送任意非机器人消息触发
 // @ts-ignore
-ws.on("GUILD_MESSAGES", (data) => {
+ws.on(AvailableIntentsEventsEnum.GUILD_MESSAGES, (data) => {
   console.log(`${formatDateStr()} [GUILD_MESSAGES] 事件接收 :`, data);
   handleMessage(data);
 });
 
+// 群组和私聊的信息触发
 // @ts-ignore
-ws.on("READY", (data) => {
-  console.log(`${formatDateStr()} [READY] 事件接收 :`, data);
+ws.on("GROUP_AND_C2C_EVENT", (data) => {
+  console.log(`${formatDateStr()} [GROUP_AND_C2C_EVENT] 事件接收 :`, data);
+  handleMessage(data);
 });
-// @ts-ignore
-ws.on("ERROR", (data) => {
-  console.log(`${formatDateStr()} [ERROR] 事件接收 :`, data);
-});
+
+// // @ts-ignore
+// ws.on("READY", (data) => {
+//   console.log(`${formatDateStr()} [READY] 事件接收 :`, data);
+// });
+// // @ts-ignore
+// ws.on("ERROR", (data) => {
+//   console.log(`${formatDateStr()} [ERROR] 事件接收 :`, data);
+// });
 
 // @机器人后触发
 // // @ts-ignore
