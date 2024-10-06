@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 
 import { argv } from "bun";
-import { parseArgs } from "util";
 import { AvailableIntentsEventsEnum } from "qq-guild-bot";
 import { initialQQClient, getQQWebStock } from "./qq-api";
 import { handleMessage } from "./qq-event-handle";

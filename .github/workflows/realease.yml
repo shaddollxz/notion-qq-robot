@@ -1,4 +1,4 @@
-name: build
+name: Realease
 
 on:
   release:
@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     name: build-and-release
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -17,16 +17,26 @@ jobs:
         with:
           bun-version: latest
 
+      - name: install dependences
+        run: bun install
+
       - name: build
         run: bun run build
+
+      - name: zip releases
+        run: |
+          mkdir -p "dist/zips"
+          for file in dist/*; do
+            if [ -f $file ]; then
+              filename=$(basename "$file")
+              7z a "dist/zips/$filename.zip" "$file" LICENSE README.md
+            fi
+          done
 
       - name: release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: |
-            notion-qq-robot-cli_${{ github.event.release.tag_name }}_windows-x64-modern.exe
-            notion-qq-robot-cli_${{ github.event.release.tag_name }}_darwin-arm64
-            notion-qq-robot-cli_${{ github.event.release.tag_name }}_linux-x64
+          files: dist/zips/*
           token: ${{ secrets.GITHUB_TOKEN }}
