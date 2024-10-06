@@ -1,5 +1,5 @@
 import type { CustomError } from "../types";
-import { client } from "./qq-client";
+import { getQQClient } from "./qq-client";
 import type { ClientApi } from "./types";
 
 async function safetyPostMessage({
@@ -7,6 +7,8 @@ async function safetyPostMessage({
   contextId,
   referId,
 }: Parameters<ClientApi["safetyPostMessage"]>[0]) {
+  const client = getQQClient();
+
   try {
     await client.c2cApi.postMessage(contextId, {
       msg_type: 0,

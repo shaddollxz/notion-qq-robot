@@ -1,0 +1,32 @@
+name: build
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: build-and-release
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: build
+        run: bun run build
+
+      - name: release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            notion-qq-robot-cli_${{ github.event.release.tag_name }}_windows-x64-modern.exe
+            notion-qq-robot-cli_${{ github.event.release.tag_name }}_darwin-arm64
+            notion-qq-robot-cli_${{ github.event.release.tag_name }}_linux-x64
+          token: ${{ secrets.GITHUB_TOKEN }}

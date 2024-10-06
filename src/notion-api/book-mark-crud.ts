@@ -1,26 +1,38 @@
 import type { PartialDatabaseObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { notionClient } from "./notion-client";
+import { getNotionClient } from "./notion-client";
 import {
   bookMarkPropertiesMap,
   type BookMarkClientProps,
 } from "./book-mark-properties-map";
 import { createRow } from "./utils";
 import type { CustomError } from "../types";
+import { values } from "../main";
 
-const { results } = await notionClient.search({
-  query: process.env.NOTION_BOOKMARK_NAME,
-  filter: {
-    property: "object",
-    value: "database",
-  },
-});
+let bookMarkDataBase: PartialDatabaseObjectResponse;
 
-const bookMarkDataBase = results[0] as PartialDatabaseObjectResponse;
+export async function getBookMarkDataBase() {
+  if (bookMarkDataBase) return bookMarkDataBase;
+
+  const notionClient = getNotionClient();
+
+  const { results } = await notionClient.search({
+    start_cursor: values.notionBookmark,
+    filter: {
+      property: "object",
+      value: "database",
+    },
+  });
+
+  return (bookMarkDataBase = results[0] as PartialDatabaseObjectResponse);
+}
 
 export async function createBookMark({
   properties,
   content,
 }: BookMarkClientProps) {
+  const notionClient = getNotionClient();
+  const bookMarkDataBase = await getBookMarkDataBase();
+
   try {
     return await notionClient.pages.create({
       parent: { type: "database_id", database_id: bookMarkDataBase.id },

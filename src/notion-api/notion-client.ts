@@ -1,6 +1,13 @@
 import { Client } from "@notionhq/client";
-import { configDotenv } from "dotenv";
 
-configDotenv();
+let notionClient: Client;
 
-export const notionClient = new Client({ auth: process.env.NOTION_SECRET });
+export function initialNotionClient(secret: string) {
+  return (notionClient = new Client({ auth: secret }));
+}
+
+export function getNotionClient() {
+  if (!notionClient) throw new Error("first initial Notion Client");
+
+  return notionClient;
+}

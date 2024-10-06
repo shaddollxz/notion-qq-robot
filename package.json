@@ -1,26 +1,28 @@
 {
   "name": "notion-qq-robot",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "Let notion bookmark the app's page via qq bots and the app's share feature",
   "type": "module",
   "main": "main.js",
   "scripts": {
-    "dev": "tsx src/main.ts"
+    "dev": "source .env && bun run src/main.ts --robot-app-id $ROBOT_APP_ID --robot-token $ROBOT_TOKEN --notion-secret $NOTION_SECRET --notion-bookmark $NOTION_BOOKMARK",
+    "help": "bun run src/main.ts -h",
+    "build": "bun run build.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@8.12.0+sha512.279278f83be782f6faaefbacbccc503301c4ec2cdafd40983e7c26aeeee7c38270f5c8e635b43464691b897abe1675b40c06df6edadde922532b7368aa9a5267",
+  "packageManager": "bun@1.1.29",
   "dependencies": {
     "@notionhq/client": "^2.2.15",
-    "date-fns": "^3.6.0",
-    "dotenv": "^16.4.5",
+    "commander": "^12.1.0",
     "parse-entities": "^4.0.1",
     "qq-guild-bot": "file:qq-guild-bot-2.10.1.tgz"
   },
   "devDependencies": {
     "@types/node": "^22.5.4",
     "tsx": "^4.19.0",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "@types/bun": "latest"
   }
 }

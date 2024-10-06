@@ -1,75 +1,75 @@
+#!/usr/bin/env bun
+
+import { argv } from "bun";
+import { parseArgs } from "util";
 import { AvailableIntentsEventsEnum } from "qq-guild-bot";
-import { ws } from "./qq-api";
+import { initialQQClient, getQQWebStock } from "./qq-api";
 import { handleMessage } from "./qq-event-handle";
 import { formatDateStr } from "./utils";
+import { initialNotionClient } from "./notion-api";
+import { Command } from "commander";
 
-// 频道中的子频道发送任意非机器人消息触发
-// @ts-ignore
-ws.on(AvailableIntentsEventsEnum.GUILD_MESSAGES, (data) => {
-  console.log(
-    `${formatDateStr()} [GUILD_MESSAGES] 事件接收 :`,
-    JSON.stringify(data)
+const program = new Command();
+
+program
+  .name(Bun.env.PROGRAM_NAME || "notion-qq-robot")
+  .version(Bun.env.PROGRAM_VERSION || "v0.0.0")
+  .description(
+    Bun.env.PROGRAM_DESCRIPTION ||
+      "Let notion bookmark the app's page via qq bots and the app's share feature"
   );
-  handleMessage(data);
-});
 
-// 群组和私聊的信息触发
-// @ts-ignore
-ws.on("GROUP_AND_C2C_EVENT", (data) => {
-  console.log(
-    `${formatDateStr()} [GROUP_AND_C2C_EVENT] 事件接收 :`,
-    JSON.stringify(data)
+program
+  .requiredOption("--robot-app-id <robot-app-id>", "required: qq robot app id")
+  .requiredOption("--robot-token <robot-token>", "required: qq robot token")
+  .requiredOption("--notion-secret <notion-secret>", "required: notion secret")
+  .requiredOption(
+    "--notion-bookmark <notion-bookmark>",
+    "required: notion star database id"
+  )
+  .action(
+    (options: {
+      robotAppId: string;
+      robotToken: string;
+      notionSecret: string;
+      notionBookmark: string;
+    }) => {
+      initialNotionClient(options.notionSecret);
+      initialQQClient({ appID: options.robotAppId, token: options.robotToken });
+
+      main();
+    }
   );
-  handleMessage(data);
-});
 
-// // @ts-ignore
-// ws.on("READY", (data) => {
-//   console.log(`${formatDateStr()} [READY] 事件接收 :`, data);
-// });
-// // @ts-ignore
-// ws.on("ERROR", (data) => {
-//   console.log(`${formatDateStr()} [ERROR] 事件接收 :`, data);
-// });
+program.parse(argv);
 
-// @机器人后触发
-// // @ts-ignore
-// ws.on("PUBLIC_GUILD_MESSAGES", (data) => {
-//   console.log(`${formatDateStr()} [PUBLIC_GUILD_MESSAGES] 事件接收 :`, data);
-//   handleMessage(data);
-// });
+export const values = program.opts<{
+  robotAppId: string;
+  robotToken: string;
+  notionSecret: string;
+  notionBookmark: string;
+}>();
 
-// // @ts-ignore
-// ws.on("GUILDS", (data) => {
-//   console.log(`${formatDateStr()} [GUILDS] 事件接收 :`, data);
-// });
-// // @ts-ignore
-// ws.on("GUILD_MEMBERS", (data) => {
-//   console.log(`${formatDateStr()} [GUILD_MEMBERS] 事件接收 :`, data);
-// });
+function main() {
+  const ws = getQQWebStock();
 
-// // @ts-ignore
-// ws.on("GUILD_MESSAGE_REACTIONS", (data) => {
-//   // prettier-ignore
-//   console.log(`${formatDateStr()} [GUILD_MESSAGE_REACTIONS] 事件接收 :`, data);
-// });
-// // @ts-ignore
-// ws.on("DIRECT_MESSAGE", (data) => {
-//   console.log(`${formatDateStr()} [DIRECT_MESSAGE] 事件接收 :`, data);
-// });
-// // @ts-ignore
-// ws.on("INTERACTION", (data) => {
-//   console.log(`${formatDateStr()} [INTERACTION] 事件接收 :`, data);
-// });
-// // @ts-ignore
-// ws.on("MESSAGE_AUDIT", (data) => {
-//   console.log(`${formatDateStr()} [MESSAGE_AUDIT] 事件接收 :`, data);
-// });
-// // @ts-ignore
-// ws.on("FORUMS_EVENT", (data) => {
-//   console.log(`${formatDateStr()} [FORUMS_EVENT] 事件接收 :`, data);
-// });
-// // @ts-ignore
-// ws.on("AUDIO_ACTION", (data) => {
-//   console.log(`${formatDateStr()} [AUDIO_ACTION] 事件接收 :`, data);
-// });
+  // 频道中的子频道发送任意非机器人消息触发
+  // @ts-ignore
+  ws.on(AvailableIntentsEventsEnum.GUILD_MESSAGES, (data) => {
+    console.log(
+      `${formatDateStr()} [GUILD_MESSAGES] 事件接收 :`,
+      JSON.stringify(data)
+    );
+    handleMessage(data);
+  });
+
+  // 群组和私聊的信息触发
+  // @ts-ignore
+  ws.on("GROUP_AND_C2C_EVENT", (data) => {
+    console.log(
+      `${formatDateStr()} [GROUP_AND_C2C_EVENT] 事件接收 :`,
+      JSON.stringify(data)
+    );
+    handleMessage(data);
+  });
+}

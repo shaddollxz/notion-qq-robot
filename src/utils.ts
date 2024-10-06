@@ -1,7 +1,7 @@
-import { format } from "date-fns";
-
 export function formatDateStr(date = new Date()) {
-  return format(date, "yyyy-MM-dd hh:mm:ss");
+  return `${date.getFullYear()}-${
+    date.getMonth() + 1
+  }-${date.getDay()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 }
 
 export function useTemplate<T extends readonly string[]>(

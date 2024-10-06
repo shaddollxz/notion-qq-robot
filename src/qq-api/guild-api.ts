@@ -1,5 +1,5 @@
 import type { CustomError } from "../types";
-import { client } from "./qq-client";
+import { getQQClient } from "./qq-client";
 import type { ClientApi } from "./types";
 
 async function safetyPostMessage({
@@ -7,6 +7,8 @@ async function safetyPostMessage({
   contextId,
   referId,
 }: Parameters<ClientApi["safetyPostMessage"]>[0]) {
+  const client = getQQClient();
+
   try {
     await client.messageApi.postMessage(contextId, {
       content: message,
@@ -37,7 +39,10 @@ async function getReferenceMessage({
 }: Parameters<ClientApi["getReferenceMessage"]>[0]): ReturnType<
   ClientApi["getReferenceMessage"]
 > {
+  const client = getQQClient();
+
   const { data } = await client.messageApi.message(contextId, messageId);
+
   return data.message;
 }
 
