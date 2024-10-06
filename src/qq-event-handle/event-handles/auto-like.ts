@@ -2,11 +2,11 @@ import type { ClientApi } from "../../qq-api";
 import { createBookMark } from "../../notion-api";
 import {
   analyserShareContent,
-  likeMessageTemplate,
   notSupportMessageGuardian,
   type MessageContentInfo,
   type MessageContext,
 } from "../utils";
+import { likeMessageTemplate } from "../constants";
 
 export async function handleAutoLikeMessage({
   messageContent,
@@ -19,7 +19,7 @@ export async function handleAutoLikeMessage({
 }) {
   const { safetyPostMessage } = clientApi;
 
-  notSupportMessageGuardian(context, messageContent.content, clientApi);
+  notSupportMessageGuardian(messageContent.content);
 
   const sharedData = analyserShareContent(messageContent.content);
 

@@ -1,3 +1,4 @@
+import type { CustomError } from "../types";
 import { client } from "./qq-client";
 import type { ClientApi } from "./types";
 
@@ -21,7 +22,10 @@ async function safetyPostMessage({
       (error as { code: string; message: string }).message !==
         "push message is waiting for audit now"
     ) {
-      console.error(`回复消息失败\n${JSON.stringify(error)}`);
+      throw {
+        postUser: false,
+        msg: `回复消息失败\n${JSON.stringify(error)}`,
+      } as CustomError;
     }
   }
 }
@@ -30,7 +34,7 @@ async function getReferenceMessage(
   _: Parameters<ClientApi["getReferenceMessage"]>[0]
 ): ReturnType<ClientApi["getReferenceMessage"]> {
   // FIXME: 私聊中不支持读取引用的信息
-  throw new Error("私聊中不支持读取引用的信息");
+  throw { postUser: true, msg: "私聊中不支持读取引用的信息" } as CustomError;
 }
 
 export const c2cApi: ClientApi = {

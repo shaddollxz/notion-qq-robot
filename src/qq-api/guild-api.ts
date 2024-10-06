@@ -1,3 +1,4 @@
+import type { CustomError } from "../types";
 import { client } from "./qq-client";
 import type { ClientApi } from "./types";
 
@@ -22,7 +23,10 @@ async function safetyPostMessage({
       (error as { code: string; message: string }).message !==
         "push message is waiting for audit now"
     ) {
-      console.error(`回复消息失败\n${JSON.stringify(error)}`);
+      throw {
+        postUser: false,
+        msg: `回复消息失败\n${JSON.stringify(error)}`,
+      } as CustomError;
     }
   }
 }

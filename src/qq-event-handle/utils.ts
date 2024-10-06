@@ -3,21 +3,12 @@ import type {
   BookMarkClientProps,
   BookMarkProperties,
 } from "../notion-api/book-mark-properties-map";
-import { useTemplate } from "../utils";
 import { DEFAULT_DIRECTIVE, Directives } from "./types";
 import { parseEntities } from "parse-entities";
 import { c2cApi } from "../qq-api/c2c-api";
 import type { MessageReference } from "qq-guild-bot";
-
-const ADDRESS_MAP = [
-  { host: ["bilibili.com", "b23.tv"], name: "bilibili" },
-  { host: ["xiaoheihe.cn"], name: "小黑盒" },
-  { host: ["skyland.com"], name: "森空岛" },
-  { host: ["github.com"], name: "github" },
-  { host: ["pan.baidu.com"], name: "网盘" },
-  { host: ["tieba.baidu.com"], name: "贴吧" },
-  { host: ["zhihu.com"], name: "知乎" },
-];
+import { ADDRESS_MAP } from "./constants";
+import type { CustomError } from "../types";
 
 export type MessageContentInfo = {
   atUserId?: string;
@@ -38,7 +29,7 @@ export function getMessageContext({
   eventType: string;
   eventId: string;
   msg: ResponseMessage;
-}): { messageContext: MessageContext; clientApi: ClientApi } {
+}): { messageContext: MessageContext; clientApi: ClientApi } | undefined {
   switch (eventType) {
     // 库没有提供 enum，参考 https://bot.q.qq.com/wiki/develop/nodesdk/wss/model.html
 
@@ -69,7 +60,7 @@ export function getMessageContext({
     }
 
     default:
-      throw new Error(`不支持的消息类型：${eventType}`);
+      console.error(`不支持的消息类型：${eventType}`);
   }
 }
 
@@ -81,7 +72,7 @@ export function analyserDirect(content: string) {
       /^<@!(?<atUserId>\d+?)>(\s)\/(?<direct>.+?)(\s)(?<content>.*)/,
     atAndDirect: /^<@!(?<atUserId>\d+?)>(\s)\/(?<direct>.+)/,
     onlyAt: /^<@!(?<atUserId>\d+?)>(\s*)(?<content>.*)/,
-    onlyDirectAndNoAt: /^\/(?<direct>.+?)\s$/,
+    onlyDirectAndNoAt: /^\/(?<direct>.+?)/,
   };
 
   if (regexpMap.atAndDirectAndContent.test(instructions)) {
@@ -105,7 +96,7 @@ export function analyserDirect(content: string) {
   }
 
   if (regexpMap.onlyDirectAndNoAt.test(instructions)) {
-    throw new Error("指令需要带上 @");
+    throw { postUser: true, msg: "指令需要带上 @" };
   }
 
   return {
@@ -168,38 +159,18 @@ export function analyserShareContent(contentStr: string) {
 }
 
 export function referenceMessageGuardian(
-  context: MessageContext,
-  { safetyPostMessage }: ClientApi
+  context: MessageContext
 ): asserts context is Required<MessageContext> {
   if (!context.messageReference?.message_id) {
-    const errorMsg = "该指令必须包含一个消息引用";
-
-    safetyPostMessage({
-      message: errorMsg,
-      contextId: context.contextId,
-      referId: context.messageId,
-    });
-
-    throw new Error(errorMsg);
+    throw { postUser: true, msg: "该指令必须包含一个消息引用" } as CustomError;
   }
 }
 
-export function notSupportMessageGuardian(
-  context: MessageContext,
-  content: string,
-  { safetyPostMessage }: ClientApi
-) {
-  const errorMsg = "当前版本不支持该消息类型，请使用最新版本手机QQ查看";
-
-  if (content.includes(errorMsg)) {
-    safetyPostMessage({
-      message: errorMsg,
-      contextId: context.contextId,
-      referId: context.messageId,
-    });
-
-    throw new Error(errorMsg);
+export function notSupportMessageGuardian(content: string) {
+  if (content.includes("不支持该消息类型")) {
+    throw {
+      postUser: true,
+      msg: "该引用可能是一个小程序的内容，机器人无法读取",
+    } as CustomError;
   }
 }
-
-export const likeMessageTemplate = useTemplate`\n已创建收藏：${"notionPageId"}\n\n回复本信息并添加指令执行更多操作喵~`;

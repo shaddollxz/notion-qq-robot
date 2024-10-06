@@ -1,2 +1,2 @@
-export * from "./create-book-mark";
+export * from "./book-mark-crud";
 export * from "./notion-client";

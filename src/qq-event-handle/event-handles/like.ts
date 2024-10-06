@@ -2,13 +2,13 @@ import type { ClientApi } from "../../qq-api";
 import { createBookMark } from "../../notion-api";
 import {
   analyserShareContent,
-  likeMessageTemplate,
   notSupportMessageGuardian,
   referenceMessageGuardian,
   type MessageContentInfo,
   type MessageContext,
 } from "../utils";
 import type { BookMarkClientProps } from "../../notion-api/book-mark-properties-map";
+import { likeMessageTemplate } from "../constants";
 
 export async function handleLikeMessage({
   messageContent,
@@ -21,14 +21,14 @@ export async function handleLikeMessage({
 }) {
   const { getReferenceMessage, safetyPostMessage } = clientApi;
 
-  referenceMessageGuardian(context, clientApi);
+  referenceMessageGuardian(context);
 
   const referenceMessage = await getReferenceMessage({
     contextId: context.contextId,
     referId: context.messageReference.message_id,
   });
 
-  notSupportMessageGuardian(context, referenceMessage.content, clientApi);
+  notSupportMessageGuardian(referenceMessage.content);
 
   const sharedData = analyserShareContent(referenceMessage.content);
 
