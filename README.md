@@ -1,6 +1,6 @@
 # notion-qq-robot
 
-将 QQ 机器人收集到的数据发送到 notion
+通过 QQ 机器人将内容收集到 notion 页面中
 
 ## 参数获取和应用配置
 
@@ -16,14 +16,27 @@
 
 1. 到 notion 的[集成页面](https://www.notion.so/my-integrations)新建一个 **Internal** 集成，然后复制 secret，这个就是 `--notion-secret`
 2. 复制[这个模版](https://succinct-suede-c59.notion.site/Stars-117b65a43fca80ada97ace33432be743?pvs=25)到自己的空间，**不要修改鼠标表格的字段名字，但是可以新增**
-3. 查看复制后模版的链接 `https://www.notion.so/<database-name>-<database-id>?pvs=4` 其中 database-id 就是 `--notion-bookmark` 参数需要的值
+3. 到复制的模版中，点击右上角的设置，在最下面有个链接选项，把刚才创建的集成链接到该页面
+4. 查看复制后模版的链接 `https://www.notion.so/<database-name>-<database-id>?pvs=4` 其中 database-id 就是 `--notion-bookmark` 参数需要的值
 
 ## Usage
 
-启动服务：
+### 启动服务
 
 ```bash
 notion-qq-robot --robot-app-id <ROBOT_APP_ID> --robot-token <ROBOT_TOKEN> --notion-secret <NOTION_SECRET> --notion-bookmark <NOTION_BOOKMARK>
 ```
 
-启动后就可以通过 qq 机器人把发送给它的链接收集起来了
+### 使用
+
+#### 自动收藏（支持频道、私聊）
+
+在某个 app/网站 中看到了想要收藏的内容，点击它自带的转发按钮，将内容转发给机器人或者有机器人的频道的文字子频道中，机器人会自动处理链接，放到 notion 的收藏页面
+
+> 如果是 BiliBili 这种转发后会变成 QQ 小程序的链接，一般都有一个安卓原生的转发功能，用那个功能转发给机器人的私聊页面
+
+#### 手动收藏（支持频道）
+
+在服务没有启动的情况下转发给机器人不会触发收藏，但是在服务启动后选中没有收藏到的内容，使用 QQ 的引用功能在回复引用时手动触发机器人的 `/like` 指令来做到手动让机器人触发收藏功能
+
+> 该功能因为私聊的 api 限制，无法读取回复的应用，所以只有频道中支持
