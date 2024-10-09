@@ -29,7 +29,8 @@ jobs:
           for file in dist/*; do
             if [ -f $file ]; then
               filename=$(basename "$file")
-              7z a "dist/zips/$filename.zip" "$file" LICENSE README.md
+              cp $file ./notion-qq-robot-cli
+              7z a "dist/zips/$filename.zip" notion-qq-robot-cli LICENSE README.md
             fi
           done
 
