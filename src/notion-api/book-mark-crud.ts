@@ -5,18 +5,18 @@ import {
   type BookMarkClientProps,
 } from "./book-mark-properties-map";
 import { createRow } from "./utils";
-import type { CustomError } from "../types";
-import { values } from "../main";
+import type { CustomError } from "@/types";
+import { options } from "@/main";
 
 let bookMarkDataBase: PartialDatabaseObjectResponse;
 
 export async function getBookMarkDataBase() {
-  if (bookMarkDataBase) return bookMarkDataBase;
+  if (bookMarkDataBase) return Promise.resolve(bookMarkDataBase);
 
   const notionClient = getNotionClient();
 
   const { results } = await notionClient.search({
-    start_cursor: values.notionBookmark,
+    start_cursor: options.notionBookmark,
     filter: {
       property: "object",
       value: "database",

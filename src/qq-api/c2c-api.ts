@@ -1,4 +1,4 @@
-import type { CustomError } from "../types";
+import type { CustomError } from "@/types";
 import { getQQClient } from "./qq-client";
 import type { ClientApi } from "./types";
 

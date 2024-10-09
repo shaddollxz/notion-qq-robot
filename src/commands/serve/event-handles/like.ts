@@ -1,14 +1,13 @@
-import type { ClientApi } from "../../qq-api";
-import { createBookMark } from "../../notion-api";
+import type { ClientApi } from "@/qq-api";
+
 import {
-  analyserShareContent,
   notSupportMessageGuardian,
   referenceMessageGuardian,
   type MessageContentInfo,
   type MessageContext,
 } from "../utils";
-import type { BookMarkClientProps } from "../../notion-api/book-mark-properties-map";
 import { likeMessageTemplate } from "../constants";
+import { starCommand } from "@/commands";
 
 export async function handleLikeMessage({
   messageContent,
@@ -30,23 +29,20 @@ export async function handleLikeMessage({
 
   notSupportMessageGuardian(referenceMessage.content);
 
-  const sharedData = analyserShareContent(referenceMessage.content);
-
-  const bookMark: BookMarkClientProps = {
-    properties: {
-      ...sharedData.properties,
-      description: messageContent.content || sharedData.properties.description,
-    },
+  const notionPageId = await starCommand(referenceMessage.content, {
     content: referenceMessage.content,
-  };
+    properties: {
+      description: messageContent.content,
+    },
+  });
 
-  const { id: notionPageId } = await createBookMark(bookMark);
-
-  return safetyPostMessage({
+  await safetyPostMessage({
     message: likeMessageTemplate.setDate({
       notionPageId,
     }),
     contextId: context.contextId,
     referId: context.messageId,
   });
+
+  return notionPageId;
 }

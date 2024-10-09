@@ -1,12 +1,11 @@
-import type { ClientApi } from "../../qq-api";
-import { createBookMark } from "../../notion-api";
+import type { ClientApi } from "@/qq-api";
 import {
-  analyserShareContent,
   notSupportMessageGuardian,
   type MessageContentInfo,
   type MessageContext,
 } from "../utils";
 import { likeMessageTemplate } from "../constants";
+import { starCommand } from "@/commands";
 
 export async function handleAutoLikeMessage({
   messageContent,
@@ -21,19 +20,19 @@ export async function handleAutoLikeMessage({
 
   notSupportMessageGuardian(messageContent.content);
 
-  const sharedData = analyserShareContent(messageContent.content);
+  const notionPageId = await starCommand(messageContent.content, {
+    properties: {
+      title: messageContent.content,
+    },
+  });
 
-  const bookMark = sharedData ?? {
-    title: messageContent.content,
-  };
-
-  const { id: notionPageId } = await createBookMark(bookMark);
-
-  return safetyPostMessage({
+  await safetyPostMessage({
     message: likeMessageTemplate.setDate({
       notionPageId,
     }),
     contextId: context.contextId,
     referId: context.messageId,
   });
+
+  return notionPageId;
 }

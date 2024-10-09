@@ -1,12 +1,10 @@
 #!/usr/bin/env bun
 
-import { argv } from "bun";
-import { AvailableIntentsEventsEnum } from "qq-guild-bot";
-import { initialQQClient, getQQWebStock } from "./qq-api";
-import { handleMessage } from "./qq-event-handle";
-import { formatDateStr } from "./utils";
+import { $, argv } from "bun";
+import { initialQQClient } from "./qq-api";
 import { initialNotionClient } from "./notion-api";
 import { Command } from "commander";
+import { serve, starCommand } from "./commands";
 
 const program = new Command();
 
@@ -18,7 +16,17 @@ program
       "Let notion bookmark the app's page via qq bots and the app's share feature"
   );
 
+export const options = program.opts<{
+  robotAppId: string;
+  robotToken: string;
+  notionSecret: string;
+  notionBookmark: string;
+}>();
+
+// start QQ robot serve
 program
+  .command("serve")
+  .description("Turn on the service of QQ robot")
   .requiredOption("--robot-app-id <robot-app-id>", "required: qq robot app id")
   .requiredOption("--robot-token <robot-token>", "required: qq robot token")
   .requiredOption("--notion-secret <notion-secret>", "required: notion secret")
@@ -36,39 +44,38 @@ program
       initialNotionClient(options.notionSecret);
       initialQQClient({ appID: options.robotAppId, token: options.robotToken });
 
-      main();
+      serve();
+    }
+  );
+
+// star directive
+program
+  .command("star [shared]")
+  .description("Analyze the share link and star it")
+  .requiredOption("--notion-secret <notion-secret>", "required: notion secret")
+  .requiredOption(
+    "--notion-bookmark <notion-bookmark>",
+    "required: notion star database id"
+  )
+  .action(
+    async (
+      shared: string,
+      options: { notionSecret: string; notionBookmark: string }
+    ) => {
+      if (!shared) {
+        if (await Bun.stdin.exists()) {
+          shared = await Bun.stdin.text();
+        } else {
+          throw "error: missing required argument 'shared'";
+        }
+      }
+
+      initialNotionClient(options.notionSecret);
+
+      const notionPageId = await starCommand(shared);
+
+      await $`echo ${notionPageId}`;
     }
   );
 
 program.parse(argv);
-
-export const values = program.opts<{
-  robotAppId: string;
-  robotToken: string;
-  notionSecret: string;
-  notionBookmark: string;
-}>();
-
-function main() {
-  const ws = getQQWebStock();
-
-  // 频道中的子频道发送任意非机器人消息触发
-  // @ts-ignore
-  ws.on(AvailableIntentsEventsEnum.GUILD_MESSAGES, (data) => {
-    console.log(
-      `${formatDateStr()} [GUILD_MESSAGES] 事件接收 :`,
-      JSON.stringify(data)
-    );
-    handleMessage(data);
-  });
-
-  // 群组和私聊的信息触发
-  // @ts-ignore
-  ws.on("GROUP_AND_C2C_EVENT", (data) => {
-    console.log(
-      `${formatDateStr()} [GROUP_AND_C2C_EVENT] 事件接收 :`,
-      JSON.stringify(data)
-    );
-    handleMessage(data);
-  });
-}

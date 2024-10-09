@@ -1,9 +1,10 @@
-import type { ResponseMessage } from "../qq-api/types";
-import { isCustomError } from "../types";
-import { formatDateStr } from "../utils";
+import type { ResponseMessage } from "@/qq-api";
+import { isCustomError } from "@/types";
+import { formatDateStr } from "@/utils";
 import { handleAutoLikeMessage, handleLikeMessage } from "./event-handles";
 import { Directives } from "./types";
 import { analyserDirect, getMessageContext } from "./utils";
+import { $ } from "bun";
 
 export async function handleMessage(message: {
   eventType: string;
@@ -22,18 +23,22 @@ export async function handleMessage(message: {
 
       switch (messageContent.direct) {
         case Directives.Like: {
-          return await handleLikeMessage({
+          const notionPageId = await handleLikeMessage({
             context: messageContext,
             clientApi,
             messageContent,
           });
+
+          return await $`echo ${notionPageId}`;
         }
         case Directives.AutoLike: {
-          return await handleAutoLikeMessage({
+          const notionPageId = await handleAutoLikeMessage({
             context: messageContext,
             clientApi,
             messageContent,
           });
+
+          return await $`echo ${notionPageId}`;
         }
       }
     } catch (error) {
@@ -47,7 +52,7 @@ export async function handleMessage(message: {
         }
 
         console.error(
-          `[${formatDateStr()}]: ${error.msg}\n${
+          `[${formatDateStr()}]: ${error.msg}\nreason:${
             typeof error.reason === "object"
               ? JSON.stringify(error.reason)
               : error.reason

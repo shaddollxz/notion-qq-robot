@@ -21,22 +21,34 @@
 
 ## Usage
 
-### 启动服务
+### 启动机器人服务
 
 ```bash
-notion-qq-robot --robot-app-id <ROBOT_APP_ID> --robot-token <ROBOT_TOKEN> --notion-secret <NOTION_SECRET> --notion-bookmark <NOTION_BOOKMARK>
+notion-qq-robot-cli serve --robot-app-id <ROBOT_APP_ID> --robot-token <ROBOT_TOKEN> --notion-secret <NOTION_SECRET> --notion-bookmark <NOTION_BOOKMARK>
 ```
 
-### 使用
-
-#### 自动收藏（支持频道、私聊）
+#### 回复机器人：自动收藏（支持频道、私聊）
 
 在某个 app/网站 中看到了想要收藏的内容，点击它自带的转发按钮，将内容转发给机器人或者有机器人的频道的文字子频道中，机器人会自动处理链接，放到 notion 的收藏页面
 
 > 如果是 BiliBili 这种转发后会变成 QQ 小程序的链接，一般都有一个安卓原生的转发功能，用那个功能转发给机器人的私聊页面
 
-#### 手动收藏（支持频道）
+#### 机器人指令（/like）：手动收藏（支持频道）
 
 在服务没有启动的情况下转发给机器人不会触发收藏，但是在服务启动后选中没有收藏到的内容，使用 QQ 的引用功能在回复引用时手动触发机器人的 `/like` 指令来做到手动让机器人触发收藏功能
 
 > 该功能因为私聊的 api 限制，无法读取回复的应用，所以只有频道中支持
+
+### 命令行
+
+该工具不仅提供启动机器人服务的命令，同时提供了命令行的功能，以方便将机器人的能力集成进其他工具（如 mac 的快捷指令）
+
+#### star
+
+支持参数传入或者 stdin 的输入
+
+```bash
+notion-qq-robot-cli star [shared] --notion-secret <NOTION_SECRET> --notion-bookmark <NOTION_BOOKMARK>
+
+echo "shared" | notion-qq-robot-cli star --notion-secret <NOTION_SECRET> --notion-bookmark <NOTION_BOOKMARK>
+```

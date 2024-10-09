@@ -1,14 +1,12 @@
-import { guildApi, type ClientApi, type ResponseMessage } from "../qq-api";
-import type {
-  BookMarkClientProps,
-  BookMarkProperties,
-} from "../notion-api/book-mark-properties-map";
+import {
+  c2cApi,
+  guildApi,
+  type ClientApi,
+  type ResponseMessage,
+} from "@/qq-api";
 import { DEFAULT_DIRECTIVE, Directives } from "./types";
-import { parseEntities } from "parse-entities";
-import { c2cApi } from "../qq-api/c2c-api";
 import type { MessageReference } from "qq-guild-bot";
-import { ADDRESS_MAP } from "./constants";
-import type { CustomError } from "../types";
+import type { CustomError } from "@/types";
 
 export type MessageContentInfo = {
   atUserId?: string;
@@ -104,58 +102,6 @@ export function analyserDirect(content: string) {
     direct: DEFAULT_DIRECTIVE,
     content: instructions,
   };
-}
-
-export function analyserShareContent(contentStr: string) {
-  const content = parseEntities(decodeURIComponent(contentStr));
-
-  const regexpMap = {
-    qqShare: /^\[.+?\](?<title>.+?)\s(.*?)\s(?<link>http(s?):\/\/.+?)\s.+?\s/,
-    linkWithText:
-      /(?<pre>.*?)\s?(?<link>https?:\/\/.+?)(\s|(?<suffix1>[^\w|\/|\?|\=|#|&|.|-]|$))(?<suffix2>.*)$/,
-  };
-
-  let row: BookMarkClientProps = {
-    properties: {
-      title: content,
-    },
-  };
-
-  let matched = false;
-
-  if (!matched && regexpMap.qqShare.test(content)) {
-    matched = true;
-    row.properties = content.match(regexpMap.qqShare)!
-      .groups as unknown as BookMarkProperties;
-  }
-
-  if (!matched && regexpMap.linkWithText.test(content)) {
-    matched = true;
-    const result = content.match(regexpMap.linkWithText)!.groups!;
-
-    row = {
-      properties: {
-        title: result.pre || `${result.suffix1 ?? ""}${result.suffix2}`,
-        description: `${result.suffix1 ?? ""}${result.suffix2}`,
-        link: result.link,
-      },
-      content,
-    };
-  }
-
-  if (row.properties.link) {
-    row.properties.from = ADDRESS_MAP.reduce((acc, cur) => {
-      if (acc) return acc;
-
-      if (cur.host.some((url) => row.properties.link!.includes(url))) {
-        return cur.name;
-      }
-
-      return acc;
-    }, "");
-  }
-
-  return row;
 }
 
 export function referenceMessageGuardian(
