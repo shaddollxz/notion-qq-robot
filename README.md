@@ -6,7 +6,7 @@
 
 ### 机器人
 
-1. 到 [QQ 机器人的官网](https://q.qq.com/#/)注册一个机器人，注册后就能获得 app-id 和 token
+1. 到[QQ 机器人的官网](https://q.qq.com/#/)注册一个机器人，注册后就能获得 app-id 和 token
 2. 到 开发 -> [沙箱配置](https://q.qq.com/qqbot/#/developer/sandbox) 中的 **在消息列表配置** 和 **在 QQ 频道配置** 添加自己的账号，没有频道就注册一个就行
 3. 到 发布设置 -> [功能配置](https://q.qq.com/qqbot/#/developer/publish-config/function-config) 中新建以下指令，使用场景勾上 **QQ 频道**、**消息列表**
    - /like

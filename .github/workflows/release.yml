@@ -28,9 +28,13 @@ jobs:
           mkdir -p "dist/zips"
           for file in dist/*; do
             if [ -f $file ]; then
-              filename=$(basename "$file")
-              cp $file ./notion-qq-robot-cli
-              7z a "dist/zips/$filename.zip" notion-qq-robot-cli LICENSE README.md
+              zipFilename=$(basename "$file" ".exe")
+              cliFileName="notion-qq-robot"
+              if echo "$zipFilename" | grep -q "windows"; then
+                cliFileName="$cliFileName.exe"
+              fi
+              cp $file $cliFileName
+              7z a "dist/zips/$zipFilename.zip" $cliFileName LICENSE README.md
             fi
           done
 
